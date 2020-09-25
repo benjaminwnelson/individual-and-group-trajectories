@@ -1,0 +1,98 @@
+---
+title: "Individual and Group Trajectories"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+# Load Packages_______________________________________
+```{r}
+library(psych) #for statistics
+library(ggplot2) #for data visualization
+library(dplyr) #for data wrangling
+library(tidyverse) #for data wrangling
+library(foreign) #for importing data
+library(ggplotAssist) #for data visualization
+library(summarytools) #for summary statistics
+library(yarrr) #for data visualization
+library(styler)
+library(readxl)
+library(tidyr) #for tidying code
+```
+
+#Load Data. This is only for an example
+```{r}
+data <- read.table("https://stats.idre.ucla.edu/stat/r/examples/alda/data/tolerance1_pp.txt", sep = ",", header = TRUE)
+
+## change id and male to factor variables
+data <- within(data, {
+    id <- factor(id)
+    gender <- factor(male, levels = 0:1, labels = c("female", "male"))
+    sexual_communication <- tolerance
+})
+
+## view the first few lines of the data
+head(data)
+```
+
+
+#Add points to graph
+```{r}
+p <- ggplot(data = data, aes(x = age, y = sexual_communication, group = id))
+p + geom_point()
+```
+
+#Add lines to graph
+```{r}
+## simple spaghetti plot
+p + geom_line()
+```
+#Make figure where lines are colored by gender
+```{r}
+ggplot(data = data, aes(x = age, y = sexual_communication, group = id, color = gender)) + #this places age at x-axis and sexual communication at y-axis and provides individual lines by gender, which you would have as who they are interacting with (e.g., parent, peer, sexual partner)
+  geom_line() + #This adds lines between each time
+  geom_point() #This adds a point
+```
+
+#Make graph look nicer
+```{r}
+ggplot(data = data, aes(x = age, y = sexual_communication, color = gender)) +
+  geom_line(aes(group = id), alpha = .3) + #This fades the individual lines
+  geom_point() +
+  stat_summary(geom = "smooth") + #this adds a smooth line for the mean values for gender, which for you will be the individual they are interacting with (e.g., parent, peer, sexual partner)
+  theme(axis.line = element_line(linetype = "solid"), #This adds a line for the axes
+  panel.background = element_rect(fill = "white")) #This makes the background white
+```
+
+
+#Add Standard Error Bars
+```{r}
+ggplot(data = data, aes(x = age, y = sexual_communication, color = gender)) +
+  geom_line(aes(group = id), alpha = .3) +
+  geom_point() +
+  stat_summary(geom = "smooth") + 
+  theme(axis.line = element_line(linetype = "solid"), 
+  panel.background = element_rect(fill = "white")) +
+  stat_summary(fun.data = mean_se, geom = "errorbar") #This adds standard error bars
+```
+
+#This adds density distribution
+```{r}
+p1 <- ggplot(data = data, aes(x = age, y = sexual_communication, color = gender)) +
+  geom_line(aes(group = id), alpha = .3) +
+  geom_point() +
+  stat_summary(geom = "smooth") + 
+  theme(axis.line = element_line(linetype = "solid"), 
+  panel.background = element_rect(fill = "white")) +
+  stat_summary(fun.data = mean_se, geom = "errorbar")
+
+ggExtra::ggMarginal(
+  p = p1,
+  type = 'density',
+  margins = 'y',
+  size = 5,
+  colour = 'black',
+  fill = 'gray'
+)
+```
+
